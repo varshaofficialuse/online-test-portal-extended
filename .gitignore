@@ -1,28 +1,28 @@
-# Python
+# Python caches
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.sqlite3
 
-# Virtual environment
+# Virtual environments
+venv/
 .venv/
-venv/                # Only ignore the venv folder itself
 __pypackages__/
 
-# Env & secrets
+# Environment files & secrets
 .env
 .env.*
 secrets.json
 
-# IDEs
+# IDEs / editors
 .vscode/
 .idea/
 *.sublime-project
 *.sublime-workspace
 *.swp
 
-# Build / dist
+# Build / distribution
 dist/
 build/
 *.egg-info/
@@ -36,6 +36,6 @@ pip-wheel-metadata/
 htmlcov/
 .pytest_cache/
 
-# Alembic
+# Alembic compiled files
 alembic/*.pyc
 alembic/versions/*.pyc
