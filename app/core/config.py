@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY", "default_secret")
     ALGORITHM: str=os.getenv("ALGORITHM",'SHA256')
     ACCESS_TOKEN_EXPIRE_MINUTES: int =os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES",30)
+    REFRESH_TOKEN_EXPIRE_MINUTES: int = os.getenv("REFRESH_TOKEN_EXPIRE_MINUTES",10080)
+    REFRESH_SECRET_KEY: str = os.getenv("REFRESH_SECRET_KEY","")
 
 
     @property

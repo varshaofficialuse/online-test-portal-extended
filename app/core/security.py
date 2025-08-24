@@ -14,7 +14,10 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     return pwd_context.verify(password, hashed)
 
-def create_access_token(sub: str, minutes: int | None = None) -> str:
+def create_access_token(sub: str, minutes: int | None = None, secret: str | None = None) -> str:
     exp = datetime.now(timezone.utc) + timedelta(minutes=minutes or settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    return jwt.encode({"sub": sub, "exp": exp}, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-
+    return jwt.encode(
+        {"sub": sub, "exp": exp},
+        secret or settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM
+    )
