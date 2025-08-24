@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+
+# Virtual environment
+.venv/
+venv/                # Only ignore the venv folder itself
+__pypackages__/
+
+# Env & secrets
+.env
+.env.*
+secrets.json
+
+# IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+
+# Build / dist
+dist/
+build/
+*.egg-info/
+pip-wheel-metadata/
+
+# Logs
+*.log
+
+# Testing / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Alembic
+alembic/*.pyc
+alembic/versions/*.pyc

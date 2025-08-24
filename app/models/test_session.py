@@ -1,0 +1,26 @@
+# test_session.py
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Integer, ForeignKey, DateTime, Boolean, JSON
+from app.core.database import Base
+from datetime import datetime
+
+
+class TestSession(Base):
+    __tablename__ = "test_sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    test_id: Mapped[int] = mapped_column(ForeignKey("tests.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    answers: Mapped[dict] = mapped_column(JSON, default={})
+    score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    max_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    suspicious_flags: Mapped[dict] = mapped_column(JSON, default={})
+    webcam_required: Mapped[bool] = mapped_column(Boolean, default=False)
+    invalidated: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # relationships
+    test = relationship("Test", back_populates="sessions")
+    user = relationship("User", back_populates="test_sessions")
+    proctor_events = relationship("ProctorEvent", back_populates="session", cascade="all, delete-orphan")
