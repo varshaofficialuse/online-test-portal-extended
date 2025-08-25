@@ -23,6 +23,7 @@ class Test(Base):
     )
     start_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     end_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     duration_minutes: Mapped[int] = mapped_column(Integer, default=30)
     shuffle_questions: Mapped[bool] = mapped_column(Boolean, default=True)
     allow_review: Mapped[bool] = mapped_column(Boolean, default=True)

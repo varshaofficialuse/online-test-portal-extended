@@ -1,6 +1,8 @@
-from pydantic import BaseModel, Field
-from datetime import datetime
+from pydantic import BaseModel, Field, validator
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Literal, Dict, Any
+from typing import Optional
+from app.core.utils import ist_to_utc
 
 class TestCreate(BaseModel):
     title: str
@@ -10,7 +12,13 @@ class TestCreate(BaseModel):
     duration_minutes: int = 30
     shuffle_questions: bool = True
     allow_review: bool = True
-    note_id: Optional[int] = None   # <-- FIXED
+    note_id: Optional[int] = None
+
+    @validator("start_at", "end_at", pre=True)
+    def convert_to_utc(cls, v):
+        if v is None:
+            return v
+        return ist_to_utc(v) 
 
 
 class TestOut(TestCreate):
