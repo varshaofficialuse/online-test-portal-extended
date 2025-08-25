@@ -19,7 +19,7 @@ auth_scheme = HTTPBearer()
 
 
 
-@router.post("/", response_model=TestOut)
+@router.post("/create", response_model=TestOut)
 def create_test(payload: TestCreate, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
     test = Test(**payload.dict(), creator_id=current_user.id)
     db.add(test)
@@ -28,12 +28,6 @@ def create_test(payload: TestCreate, db: Session = Depends(get_db), current_user
     return test
 
 
-@router.get("/{test_id}", response_model=TestOut)
-def get_test(test_id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
-    test = db.get(Test, test_id)
-    if not test:
-        raise HTTPException(status_code=404, detail="Test not found")
-    return test
 
 
 @router.post("/{test_id}/bulk-from-quiz", response_model=list[QuestionOut])
@@ -104,6 +98,15 @@ def add_random_questions_from_quiz(
     return created_questions
 
 
+
+@router.get("/{test_id}", response_model=TestOut)
+def get_test(test_id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
+    test = db.get(Test, test_id)
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+    return test
+
+
 @router.get("/{test_id}/questions", response_model=List[QuestionOut])
 def list_questions(test_id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
     return db.query(Question).filter(Question.test_id == test_id).all()
@@ -118,3 +121,11 @@ def delete_test(test_id: int, db: Session = Depends(get_db), current_user: User 
     db.delete(test)
     db.commit()
     return None
+
+@router.get("/", response_model=List[TestOut])
+def list_all_tests(db: Session = Depends(get_db)):
+    """
+    Get the list of all tests
+    """
+    tests = db.query(Test).all()
+    return tests
