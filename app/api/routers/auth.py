@@ -36,13 +36,19 @@ def admin_required(
     return user
 
     
-
-@router.post("/signup", response_model=TokenOut)
+@router.post("/signup")
 def signup(payload: SignupIn, db: Session = Depends(get_db)):
     exists = db.query(User).filter(User.email == payload.email).first()
     if exists:
         raise HTTPException(status_code=400, detail="Email already registered")
-    user = User(name=payload.name, email=payload.email, password_hash=hash_password(payload.password), role=UserRole.STUDENT)
+
+    user = User(
+        name=payload.name,
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+        role=UserRole.STUDENT
+    )
+
     if user.role.lower() == "admin":
         raise HTTPException(
             status_code=403,
@@ -52,7 +58,9 @@ def signup(payload: SignupIn, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return 
+
+    return {"message": "User registered successfully"}
+
 
 
 

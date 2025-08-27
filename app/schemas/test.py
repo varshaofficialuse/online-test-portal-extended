@@ -18,6 +18,8 @@ class TestCreate(BaseModel):
     def convert_to_utc(cls, v):
         if v is None:
             return v
+        if isinstance(v, str):
+            v = datetime.fromisoformat(v) 
         return ist_to_utc(v) 
 
 
@@ -43,7 +45,21 @@ class QuestionOut(QuestionCreate):
 
     class Config:
         from_attributes = True
+class TestManualCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    start_at: Optional[datetime] = None
+    end_at: Optional[datetime] = None
+    duration_minutes: int = 30
+    shuffle_questions: bool = True
+    allow_review: bool = True
+    note_id: Optional[int] = None
+    questions: List[QuestionCreate]  # 👈 include questions inside
 
+    # convert times to UTC if provided
+    @classmethod
+    def validate_time(cls, v):
+        return ist_to_utc(v) if v else v
 
 
 class SessionStart(BaseModel):

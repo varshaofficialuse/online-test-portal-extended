@@ -9,10 +9,14 @@ class Question(BaseModel):
 class QuizOut(BaseModel):
     id: int
     note_id: int
+    title: str | None = None  
+
     created_by: int
     questions: List[Question]   # ✅ list, not dict
+    
 
-
+    class Config:
+        from_attributes = True  
     
 class QuizCreate(BaseModel):
     note_id: int

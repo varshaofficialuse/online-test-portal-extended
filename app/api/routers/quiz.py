@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
@@ -10,6 +10,8 @@ from app.models.quizResult import QuizResult
 from app.schemas.quiz import QuizCreate, QuizOut
 import openai
 import json
+import re
+
 from typing import List
 from  app.api.routers.auth import admin_required
 from app.models.user import User
@@ -51,11 +53,7 @@ def generate_mcqs_from_note(note_title: str, note_content: str, num_questions: i
         Note Content: {note_content}
         Return as JSON array of objects like this:
         [
-          {{
-            "question": "...",
-            "options": ["...", "...", "...", "..."],
-            "answer": 0
-          }}
+          {{"question": "...", "options": ["...", "...", "...", "..."], "answer": 0}}
         ]
         Wrap the JSON in a single code block (```) without extra text.
         """}
@@ -69,9 +67,10 @@ def generate_mcqs_from_note(note_title: str, note_content: str, num_questions: i
 
     content = response.choices[0].message.content
 
-    # Remove ``` wrapping if present
-    if content.startswith("```"):
-        content = "\n".join(content.split("\n")[1:-1])
+    # Extract JSON inside ``` if present
+    match = re.search(r"```(?:json)?\s*(\[.*\])\s*```", content, re.DOTALL)
+    if match:
+        content = match.group(1)
 
     try:
         mcqs = json.loads(content)
@@ -82,7 +81,7 @@ def generate_mcqs_from_note(note_title: str, note_content: str, num_questions: i
         elif not isinstance(mcqs, list):
             raise ValueError("MCQs is not a list or dict")
 
-        # Optional: validate each question
+        # Validate each question
         for q in mcqs:
             if not all(k in q for k in ["question", "options", "answer"]):
                 raise ValueError(f"Invalid question format: {q}")
@@ -94,7 +93,6 @@ def generate_mcqs_from_note(note_title: str, note_content: str, num_questions: i
             status_code=500,
             detail=f"Failed to parse MCQs from AI response:\n{content}\nError: {str(e)}"
         )
-
 
 
 @router.post("/create/", response_model=QuizOut)
@@ -115,8 +113,9 @@ def create_quiz(
     db.add(q)
     db.commit()
     db.refresh(q)
-
-    return q
+    response_data = QuizOut.from_orm(q)
+    response_data.title = note.title
+    return response_data
 
 
 @router.delete("/delete/{quiz_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -137,20 +136,16 @@ def delete_quiz(
 
 
 
-
 @router.get("/quizzes/", response_model=List[QuizOut])
 def list_quizzes(db: Session = Depends(get_db), uid: int = Depends(get_current_user_id)):
     quizzes = db.query(Quiz).filter(Quiz.created_by == uid).all()
     result = []
 
     for q in quizzes:
+        # Normalize questions
         questions_data = q.questions
-
-        # If stored as dict, convert to list
         if isinstance(questions_data, dict):
             questions_data = list(questions_data.values())
-
-        # If stored as JSON string, parse first
         if isinstance(questions_data, str):
             try:
                 questions_data = json.loads(questions_data)
@@ -159,16 +154,16 @@ def list_quizzes(db: Session = Depends(get_db), uid: int = Depends(get_current_u
             except:
                 questions_data = []
 
-        result.append(
-            QuizOut(
-                id=q.id,
-                note_id=q.note_id,
-                created_by=q.created_by,
-                questions=questions_data
-            )
-        )
+        # Convert ORM object → Pydantic model
+        response_data = QuizOut.from_orm(q)
+
+        # ✅ Inject note.title dynamically
+        response_data.title = q.note.title if q.note else None
+
+        result.append(response_data)
 
     return result
+
 
 
 

@@ -4,13 +4,14 @@ from jose import jwt,JWTError
 from app.core.config import settings
 import random
 from  app.api.routers.auth import admin_required
+from app.models.note import Note
 from app.models.user import User
 
 from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
 from app.models.quiz import Quiz
-from app.schemas.test import TestCreate, TestOut, QuestionCreate, QuestionOut
+from app.schemas.test import TestCreate, TestManualCreate, TestOut, QuestionCreate, QuestionOut
 from app.models.test import Test
 from app.models.question import Question, QuestionType
 from app.models.user import User
@@ -28,6 +29,44 @@ def create_test(payload: TestCreate, db: Session = Depends(get_db), current_user
     return test
 
 
+@router.post("/create/manually", response_model=TestOut)
+def create_test_manually(data: TestManualCreate, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
+    note = db.query(Note).filter(Note.id == data.note_id).first()
+    if data.note_id and not note:
+         raise HTTPException(status_code=400, detail="Note not found")
+
+    # create Test object
+    new_test = Test(
+        title=data.title,
+        description=data.description,
+        start_at=data.start_at,
+        end_at=data.end_at,
+        duration_minutes=data.duration_minutes,
+        shuffle_questions=data.shuffle_questions,
+        allow_review=data.allow_review,
+        note_id=data.note_id
+    )
+    db.add(new_test)
+    db.flush()  # get new_test.id before adding questions
+
+    # create Questions
+    for q in data.questions:
+        question = Question(
+            test_id=new_test.id,
+            ques=q.ques,
+            type=q.type,
+            difficulty=q.difficulty,
+            tags=q.tags or {},
+            points=q.points,
+            options=q.options or [],
+            answer=q.answer,
+        )
+        db.add(question)
+
+    db.commit()
+    db.refresh(new_test)
+
+    return new_test
 
 
 @router.post("/{test_id}/bulk-from-quiz", response_model=list[QuestionOut])
