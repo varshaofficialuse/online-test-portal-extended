@@ -15,7 +15,6 @@ class Quiz(Base):
     # relationships
     note = relationship("Note", back_populates="quizzes")
     creator = relationship("User", back_populates="quizzes")
-    # test_questions = relationship("Question", back_populates="quiz", cascade="all, delete-orphan")
 
     results = relationship("QuizResult", back_populates="quiz", cascade="all, delete-orphan")
    

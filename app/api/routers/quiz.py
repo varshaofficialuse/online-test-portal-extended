@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import jwt, JWTError
@@ -6,8 +6,9 @@ from app.core.database import get_db
 from app.core.config import settings
 from app.models.quiz import Quiz
 from app.models.note import Note
+from app.models.question import Question
 from app.models.quizResult import QuizResult
-from app.schemas.quiz import QuizCreate, QuizOut
+from app.schemas.quiz import QuizCreate, QuizOut,AnswerSubmission,ResultOut
 import openai
 import json
 import re
@@ -118,6 +119,17 @@ def create_quiz(
     return response_data
 
 
+
+
+
+
+
+
+
+
+
+
+
 @router.delete("/delete/{quiz_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_quiz(
     quiz_id: int,
@@ -207,3 +219,72 @@ def submit_quiz(
     db.refresh(result)
 
     return {"quiz_id": quiz.id, "score": score, "total": len(questions)}
+
+
+
+
+
+@router.get("/{note_id}/quiz/{quiz_id}/questions", response_model=dict)
+def get_questions_from_quiz(
+    note_id: int,
+    quiz_id: int,
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, le=1000),
+):
+    # Get the quiz filtered by note_id
+    quiz = db.query(Quiz).filter(Quiz.id == quiz_id, Quiz.note_id == note_id).first()
+    if not quiz:
+        raise HTTPException(404, "Quiz not found for this note")
+
+    # Questions are stored as JSON in quiz.questions
+    questions_data = quiz.questions or []
+
+    total = len(questions_data)
+    paginated_questions = questions_data[skip : skip + limit]
+
+    return {"total": total, "items": paginated_questions}
+
+
+@router.post("/{note_id}/quiz/{quiz_id}/submit", response_model=ResultOut)
+def submit_answers(
+    note_id: int,
+    quiz_id: int,
+    submission: AnswerSubmission,
+    db: Session = Depends(get_db),
+):
+    quiz = db.query(Quiz).filter(Quiz.id == quiz_id, Quiz.note_id == note_id).first()
+    if not quiz or not quiz.questions:
+        raise HTTPException(404, "No questions found for this quiz")
+
+    questions_data = quiz.questions
+    score = 0
+    total_points = 0
+    details = []
+
+    for idx, q in enumerate(questions_data):
+        qid = q.get("id") or idx   # fallback to index if no id
+        selected = submission.answers.get(qid)
+        correct = q.get("answer")
+        points = q.get("points", 1)
+        is_correct = selected == correct
+
+        total_points += points
+        if is_correct:
+            score += points
+
+        details.append({
+            "question_id": qid,
+            "question": q.get("question") or q.get("ques"),  # support both keys
+            "options": q.get("options"),
+            "selected": selected,
+            "correct": correct,
+            "is_correct": is_correct,
+            "points": points
+        })
+
+    return {
+        "score": score,
+        "total": total_points,
+        "details": details
+    }

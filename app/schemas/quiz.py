@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List,Dict, Any
 
 class Question(BaseModel):
     question: str
@@ -20,3 +20,19 @@ class QuizOut(BaseModel):
     
 class QuizCreate(BaseModel):
     note_id: int
+
+
+
+class AnswerSubmission(BaseModel):
+    answers: Dict[int, int]  # {question_id: selected_option_index}
+
+
+class ResultOut(BaseModel):
+    score: int
+    total: int
+    details: List[Dict[str, Any]]
+
+class ResultOut(BaseModel):
+    score: int
+    total: int
+    details: List[Dict[str, Any]]
