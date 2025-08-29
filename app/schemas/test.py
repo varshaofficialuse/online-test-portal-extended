@@ -46,7 +46,8 @@ class QuestionOut(QuestionCreate):
     class Config:
         from_attributes = True
 
-
+class QuizIdSchema(BaseModel):
+    quiz_id: int
 
 class TestManualCreate(BaseModel):
     title: str
@@ -74,3 +75,24 @@ class AnswerIn(BaseModel):
 class ProctorEventIn(BaseModel):
     event_type: str
     payload: Dict[str, Any] | None = None
+
+
+class QuestionUpdate(BaseModel):
+    id: Optional[int] = None
+    ques: str
+    type: str
+    difficulty: Optional[str] = None
+    tags: Optional[dict] = {}
+    points: int
+    options: List[str]
+    answer: int
+
+class TestManualUpdate(BaseModel):
+    title: Optional[str]
+    description: Optional[str]
+    start_at: Optional[datetime]
+    end_at: Optional[datetime]
+    duration_minutes: Optional[int]
+    shuffle_questions: Optional[bool]
+    allow_review: Optional[bool]
+    questions: List[QuestionUpdate]

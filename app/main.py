@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.routers import auth, notes, quiz, tests, sessions, proctor, analytics, export
+from app.api.routers import auth, notes, quiz, tests, sessions, analytics, export
 
 app = FastAPI(title="Online Test Portal API")
 
@@ -23,6 +23,5 @@ def root():
 
 app.include_router(tests.router, prefix="/tests", tags=["Tests"])
 app.include_router(sessions.router, prefix="/sessions", tags=["Sessions"])
-app.include_router(proctor.router, prefix="/proctor", tags=["Proctoring"])
 app.include_router(analytics.router, prefix="/analytics", tags=["Analytics"])
 app.include_router(export.router, prefix="/export", tags=["Export"])

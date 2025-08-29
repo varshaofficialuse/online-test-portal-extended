@@ -44,10 +44,12 @@ def calculate_score(db: Session, answers: Dict[str, Any], test_id: int) -> tuple
 
     return score, max_score
 
+
+
 @router.post("/{test_id}/start")
 def start_session(
     test_id: int,
-    payload: SessionStart,
+    payload: SessionStart,  # you can keep this if you want, but 'webcam_required' won't be used
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user)
 ):
@@ -70,10 +72,10 @@ def start_session(
     if end_at and now > end_at:
         raise HTTPException(status_code=400, detail="Test has ended")
 
+    # Create session without 'webcam_required'
     session = TestSession(
         test_id=test_id,
-        user_id=user_id,
-        webcam_required=payload.webcam_required
+        user_id=user_id
     )
     db.add(session)
     db.commit()
@@ -84,6 +86,7 @@ def start_session(
         "started_at": utc_to_ist(session.started_at).isoformat(),
         "duration_minutes": test.duration_minutes
     }
+
 
 
 

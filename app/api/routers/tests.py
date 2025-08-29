@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
 from app.models.quiz import Quiz
-from app.schemas.test import  TestCreate, TestManualCreate, TestOut, QuestionCreate, QuestionOut
+from app.schemas.test import  QuizIdSchema, TestCreate, TestManualCreate, TestManualUpdate, TestOut, QuestionCreate, QuestionOut
 from app.models.test import Test
 from app.models.question import Question, QuestionType
 from app.models.user import User
@@ -72,16 +72,61 @@ def create_test_manually(data: TestManualCreate, db: Session = Depends(get_db), 
 
 
 
+@router.put("/update/{test_id}", response_model=TestOut)
+def update_test(
+    test_id: int,
+    data: TestManualUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_required),
+):
+    test = db.query(Test).filter(Test.id == test_id).first()
+    if not test:
+        raise HTTPException(status_code=404, detail="Test not found")
+
+    # Update test fields
+    for field, value in data.dict(exclude={"questions"}).items():
+        if value is not None:
+            setattr(test, field, value)
+
+    # Process questions
+    existing_questions = {q.id: q for q in test.questions}
+
+    for q_data in data.questions:
+        if q_data.id and q_data.id in existing_questions:
+            # Update existing question
+            question = existing_questions[q_data.id]
+            for field, value in q_data.dict(exclude={"id"}).items():
+                setattr(question, field, value)
+        else:
+            # Create new question
+            new_question = Question(
+                test_id=test.id,
+                ques=q_data.ques,
+                type=q_data.type,
+                difficulty=q_data.difficulty,
+                tags=q_data.tags,
+                points=q_data.points,
+                options=q_data.options,
+                answer=q_data.answer,
+            )
+            db.add(new_question)
+
+    db.commit()
+    db.refresh(test)
+
+    return test
+
 
 
 @router.post("/{test_id}/bulk-from-quiz", response_model=list[QuestionOut])
 def add_random_questions_from_quiz(
     test_id: int,
-    quiz_id: int,
+    payload: QuizIdSchema,
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_required),
 ):
-    # Check if test exists
+    quiz_id = payload.quiz_id
+
     test = db.get(Test, test_id)
     if not test:
         raise HTTPException(status_code=404, detail="Test not found")

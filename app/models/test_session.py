@@ -18,11 +18,7 @@ class TestSession(Base):
     answers: Mapped[dict] = mapped_column(JSON, default={})
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    suspicious_flags: Mapped[dict] = mapped_column(JSON, default={})
-    webcam_required: Mapped[bool] = mapped_column(Boolean, default=False)
-    invalidated: Mapped[bool] = mapped_column(Boolean, default=False)
 
     # relationships
     test = relationship("Test", back_populates="sessions")
     user = relationship("User", back_populates="test_sessions")
-    proctor_events = relationship("ProctorEvent", back_populates="session", cascade="all, delete-orphan")

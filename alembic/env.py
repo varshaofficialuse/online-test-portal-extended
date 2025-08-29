@@ -15,7 +15,6 @@ from app.models.note import Note
 from app.models.quiz import Quiz
 from app.models.quizResult import QuizResult  # if exists
 from app.models.question import Question
-from app.models.proctor_event import ProctorEvent
 from app.models.role_enum import UserRole
 from app.models.test_session import TestSession
 from app.models.test import Test

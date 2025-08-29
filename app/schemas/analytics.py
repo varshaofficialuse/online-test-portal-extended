@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Dict, Any, List
+from typing import List
 
 class QuestionStat(BaseModel):
     question_id: int
