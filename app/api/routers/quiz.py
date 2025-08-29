@@ -246,6 +246,7 @@ def get_questions_from_quiz(
     return {"total": total, "items": paginated_questions}
 
 
+
 @router.post("/{note_id}/quiz/{quiz_id}/submit", response_model=ResultOut)
 def submit_answers(
     note_id: int,
@@ -264,10 +265,13 @@ def submit_answers(
 
     for idx, q in enumerate(questions_data):
         qid = q.get("id") or idx   # fallback to index if no id
-        selected = submission.answers.get(qid)
-        correct = q.get("answer")
         points = q.get("points", 1)
-        is_correct = selected == correct
+
+        # Student’s selected answer (None if not answered)
+        selected = submission.answers.get(qid, None)
+
+        correct = q.get("answer")
+        is_correct = (selected is not None and selected == correct)
 
         total_points += points
         if is_correct:
@@ -277,10 +281,10 @@ def submit_answers(
             "question_id": qid,
             "question": q.get("question") or q.get("ques"),  # support both keys
             "options": q.get("options"),
-            "selected": selected,
+            "selected": selected,   # will be None if unanswered
             "correct": correct,
             "is_correct": is_correct,
-            "points": points
+            "points": points if is_correct else 0   # 0 points if unanswered or wrong
         })
 
     return {
