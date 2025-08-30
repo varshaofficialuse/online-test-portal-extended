@@ -13,16 +13,44 @@ def test_analytics(test_id: int, db: Session = Depends(get_db)):
     # Total attempts
     attempts = db.query(func.count(TestSession.id))\
                  .filter(TestSession.test_id == test_id).scalar() or 0
+
     # Average score
     avg_score = db.query(func.avg(TestSession.score))\
                   .filter(TestSession.test_id == test_id).scalar() or 0.0
+
     # Maximum score
     max_score = db.query(func.max(TestSession.max_score))\
                   .filter(TestSession.test_id == test_id).scalar() or 0
 
-    # Placeholder for question stats (can be expanded later)
+    # All questions
     questions = db.query(Question).filter(Question.test_id == test_id).all()
-    qstats = [QuestionStat(question_id=q.id, correct_rate=0.0, avg_time_seconds=None) for q in questions]
+
+    # All sessions for this test
+    sessions = db.query(TestSession).filter(TestSession.test_id == test_id, TestSession.submitted_at != None).all()
+
+    qstats = []
+
+    for q in questions:
+        total_attempts = 0
+        correct_count = 0
+
+        for s in sessions:
+            # Ensure session.answers exists and question is answered
+            if s.answers and str(q.id) in s.answers:
+                total_attempts += 1
+                selected = s.answers[str(q.id)].get("selected")
+                if str(selected) == str(q.answer):
+                    correct_count += 1
+
+        correct_rate = (correct_count / total_attempts) if total_attempts > 0 else 0.0
+
+        qstats.append(
+            QuestionStat(
+                question_id=q.id,
+                correct_rate=correct_rate,
+                avg_time_seconds=None  # You can calculate later if needed
+            )
+        )
 
     return TestAnalyticsOut(
         test_id=test_id,
