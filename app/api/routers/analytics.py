@@ -1,61 +1,92 @@
-from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.core.database import get_db
 from app.models.test_session import TestSession
 from app.models.question import Question
 from app.schemas.analytics import TestAnalyticsOut, QuestionStat
-
+from fastapi import APIRouter, Depends, HTTPException
 router = APIRouter()
 
+
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError
+from app.core.config import settings
+
+auth_scheme = HTTPBearer()
+
+
+
+
+
+
+
+
+def get_current_user(token: HTTPAuthorizationCredentials = Depends(auth_scheme)) -> int:
+    try:
+        payload = jwt.decode(token.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        return int(payload.get("sub"))
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+
+
+
+
+
 @router.get("/tests/{test_id}", response_model=TestAnalyticsOut)
-def test_analytics(test_id: int, db: Session = Depends(get_db)):
-    # Total attempts
-    attempts = db.query(func.count(TestSession.id))\
-                 .filter(TestSession.test_id == test_id).scalar() or 0
+def test_analytics(
+    test_id: int,
+    db: Session = Depends(get_db),
+    uid: int = Depends(get_current_user),
+):
+    # fetch this student’s last attempt
+    last_session = (
+        db.query(TestSession)
+        .filter(TestSession.test_id == test_id, TestSession.user_id == uid)
+        .order_by(TestSession.submitted_at.desc())
+        .first()
+    )
 
-    # Average score
-    avg_score = db.query(func.avg(TestSession.score))\
-                  .filter(TestSession.test_id == test_id).scalar() or 0.0
+    if not last_session:
+        raise HTTPException(status_code=404, detail="No submission found for this test")
 
-    # Maximum score
-    max_score = db.query(func.max(TestSession.max_score))\
-                  .filter(TestSession.test_id == test_id).scalar() or 0
-
-    # All questions
+    # load all questions
     questions = db.query(Question).filter(Question.test_id == test_id).all()
-
-    # All sessions for this test
-    sessions = db.query(TestSession).filter(TestSession.test_id == test_id, TestSession.submitted_at != None).all()
+    answers = last_session.answers or {}
 
     qstats = []
+    correct_count = 0
 
     for q in questions:
-        total_attempts = 0
-        correct_count = 0
+        submitted = answers.get(str(q.id)) or answers.get(q.id)
+        is_correct = False
 
-        for s in sessions:
-            # Ensure session.answers exists and question is answered
-            if s.answers and str(q.id) in s.answers:
-                total_attempts += 1
-                selected = s.answers[str(q.id)].get("selected")
-                if str(selected) == str(q.answer):
-                    correct_count += 1
+        if submitted:
+            # convert stored answer index to actual option string
+            correct_option = q.options[q.answer] if isinstance(q.answer, int) else q.answer
+            selected_option = submitted.get("selected")
 
-        correct_rate = (correct_count / total_attempts) if total_attempts > 0 else 0.0
+            if selected_option == correct_option:
+                is_correct = True
+                correct_count += 1
 
         qstats.append(
             QuestionStat(
                 question_id=q.id,
-                correct_rate=correct_rate,
-                avg_time_seconds=None  # You can calculate later if needed
+                correct_rate=1.0 if is_correct else 0.0,
+                avg_time_seconds=None
             )
         )
 
+    # student percentage
+    student_percentage = (
+        (correct_count / len(questions)) * 100 if questions else 0.0
+    )
+
     return TestAnalyticsOut(
         test_id=test_id,
-        avg_score=float(avg_score),
-        max_score=int(max_score),
-        attempts=int(attempts),
-        question_stats=qstats
+        avg_score=float(last_session.score or 0),
+        max_score=int(last_session.max_score or len(questions)),
+        attempts=1,  # since we only return for current user’s last attempt
+        question_stats=qstats,
+        student_percentage=student_percentage,
     )
