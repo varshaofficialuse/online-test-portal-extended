@@ -39,6 +39,11 @@ class QuestionCreate(BaseModel):
     options: Optional[List[str]] = None  # For MCQs
     answer: Optional[int] = None    
 
+
+
+class AddQuestionsSchema(BaseModel):
+    questions: List[QuestionCreate]
+
 class QuestionOut(QuestionCreate):
     id: int
     test_id: int

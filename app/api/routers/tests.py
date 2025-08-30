@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from app.core.database import get_db
 from app.models.quiz import Quiz
-from app.schemas.test import  QuizIdSchema, TestCreate, TestManualCreate, TestManualUpdate, TestOut, QuestionCreate, QuestionOut
+from app.schemas.test import  AddQuestionsSchema, QuizIdSchema, TestCreate, TestManualCreate, TestManualUpdate, TestOut, QuestionCreate, QuestionOut
 from app.models.test import Test
 from app.models.question import Question, QuestionType
 from app.models.user import User
@@ -30,31 +30,20 @@ def create_test(payload: TestCreate, db: Session = Depends(get_db), current_user
     db.refresh(test)
     return test
 
+@router.post("/{test_id}/create-manually", response_model=TestOut)
+def create_test_manually(
+    test_id: int,
+    data: AddQuestionsSchema,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(admin_required)        
+):
+    new_test = db.query(Test).filter(Test.id == test_id).first()
+    if not new_test:
+        raise HTTPException(status_code=404, detail="Test not found")
 
-@router.post("/create/manually", response_model=TestOut)
-def create_test_manually(data: TestManualCreate, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
-    note = db.query(Note).filter(Note.id == data.note_id).first()
-    if data.note_id and not note:
-         raise HTTPException(status_code=400, detail="Note not found")
-
-    # create Test object
-    new_test = Test(
-        title=data.title,
-        description=data.description,
-        start_at=data.start_at,
-        end_at=data.end_at,
-        duration_minutes=data.duration_minutes,
-        shuffle_questions=data.shuffle_questions,
-        allow_review=data.allow_review,
-        note_id=data.note_id
-    )
-    db.add(new_test)
-    db.flush()  # get new_test.id before adding questions
-
-    # create Questions
     for q in data.questions:
         question = Question(
-            test_id=new_test.id,
+            test_id=test_id,
             ques=q.ques,
             type=q.type,
             difficulty=q.difficulty,
@@ -67,7 +56,6 @@ def create_test_manually(data: TestManualCreate, db: Session = Depends(get_db), 
 
     db.commit()
     db.refresh(new_test)
-
     return new_test
 
 
