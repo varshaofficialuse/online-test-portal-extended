@@ -11,6 +11,9 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
 
 
+
+
+
 router = APIRouter()
 auth_scheme = HTTPBearer()
 
@@ -62,6 +65,20 @@ def signup(payload: SignupIn, db: Session = Depends(get_db)):
     return {"message": "User registered successfully"}
 
 
+
+
+@router.get("/me")
+def get_me(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role
+    }
 
 
 @router.post("/login", response_model=dict)
