@@ -150,7 +150,7 @@ def delete_quiz(
 
 @router.get("/quizzes/", response_model=List[QuizOut])
 def list_quizzes(db: Session = Depends(get_db), uid: int = Depends(get_current_user_id)):
-    quizzes = db.query(Quiz).filter(Quiz.created_by == uid).all()
+    quizzes = db.query(Quiz).all()
     result = []
 
     for q in quizzes:
@@ -183,7 +183,7 @@ def list_quizzes(db: Session = Depends(get_db), uid: int = Depends(get_current_u
 
 @router.get("/{quiz_id}", response_model=QuizOut)
 def get_quiz(quiz_id: int, db: Session = Depends(get_db), uid: int = Depends(get_current_user_id)):
-    quiz = db.query(Quiz).filter(Quiz.id == quiz_id, Quiz.created_by == uid).first()
+    quiz = db.query(Quiz).filter(Quiz.id == quiz_id).first()
     if not quiz:
         raise HTTPException(status_code=404, detail="Quiz not found")
     return quiz

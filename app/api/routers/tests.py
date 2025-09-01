@@ -200,7 +200,7 @@ def add_random_questions_from_quiz(
 
 
 @router.get("/{test_id}", response_model=TestOut)
-def get_test(test_id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
+def get_test(test_id: int, db: Session = Depends(get_db)):
     test = db.get(Test, test_id)
     if not test:
         raise HTTPException(status_code=404, detail="Test not found")
@@ -208,7 +208,7 @@ def get_test(test_id: int, db: Session = Depends(get_db), current_user: User = D
 
 
 @router.get("/{test_id}/questions", response_model=List[QuestionOut])
-def list_questions(test_id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
+def list_questions(test_id: int, db: Session = Depends(get_db)):
     return db.query(Question).filter(Question.test_id == test_id).all()
 
 
