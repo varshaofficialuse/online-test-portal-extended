@@ -1,4 +1,3 @@
-# app/core/utils.py
 from datetime import datetime, timezone, timedelta
 
 IST = timezone(timedelta(hours=5, minutes=30))  # India Standard Time

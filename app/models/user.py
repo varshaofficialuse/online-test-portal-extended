@@ -1,4 +1,3 @@
-# user.py
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Enum
 from app.models.role_enum import UserRole

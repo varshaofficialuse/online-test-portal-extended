@@ -26,7 +26,7 @@ def get_current_user(token: HTTPAuthorizationCredentials = Depends(auth_scheme))
         raise HTTPException(status_code=401, detail="Invalid or expired token")
     
 
-
+""" check if token contains admin role or not"""
 def admin_required(
     user_id: int = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -41,6 +41,7 @@ def admin_required(
     
 @router.post("/signup")
 def signup(payload: SignupIn, db: Session = Depends(get_db)):
+    """ by default student role is selected """
     exists = db.query(User).filter(User.email == payload.email).first()
     if exists:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -69,6 +70,7 @@ def signup(payload: SignupIn, db: Session = Depends(get_db)):
 
 @router.get("/me")
 def get_me(user_id: int = Depends(get_current_user), db: Session = Depends(get_db)):
+    """ this will return current user details"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -83,6 +85,7 @@ def get_me(user_id: int = Depends(get_current_user), db: Session = Depends(get_d
 
 @router.post("/login", response_model=dict)
 def login(payload: LoginIn, db: Session = Depends(get_db)):
+    """ this will return two token access and refresh after successfull login with valid credentials"""
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
@@ -95,6 +98,7 @@ def login(payload: LoginIn, db: Session = Depends(get_db)):
 
 @router.post("/refresh", response_model=dict)
 def refresh_token(token: HTTPAuthorizationCredentials = Depends(auth_scheme), db: Session = Depends(get_db)):
+    """ this will again generate a new access token to avoid login again and again when the user's token get expired"""
     try:
         payload = jwt.decode(token.credentials, settings.REFRESH_SECRET_KEY, algorithms=[settings.ALGORITHM])
         user_id = int(payload.get("sub"))
@@ -122,6 +126,7 @@ def create_admin(
     current_user_id: int = Depends(get_current_user),  
     db: Session = Depends(get_db)
 ):
+    """ this endpoint is allowed for superadmin only , who will responsible to add new admin"""
     current_user = db.query(User).filter(User.id == current_user_id).first()
     if not current_user:
         raise HTTPException(status_code=404, detail="Current user not found")

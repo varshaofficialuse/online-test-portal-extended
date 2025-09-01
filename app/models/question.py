@@ -1,4 +1,3 @@
-# question.py
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, ForeignKey, Enum, Text, JSON
 from app.core.database import Base
@@ -10,7 +9,6 @@ class QuestionType(str, enum.Enum):
     TRUE_FALSE = "true_false"
 
 
-# question.py
 class Question(Base):
     __tablename__ = "questions"
 

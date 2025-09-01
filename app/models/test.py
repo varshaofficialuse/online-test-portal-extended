@@ -1,4 +1,3 @@
-# test.py
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, String, ForeignKey, DateTime, Boolean, Text
 from app.core.database import Base

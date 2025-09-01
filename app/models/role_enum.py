@@ -1,4 +1,3 @@
-# role_enum.py
 from enum import Enum
 
 

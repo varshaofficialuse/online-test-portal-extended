@@ -1,12 +1,12 @@
 from app.core.database import Base, engine
 # Import all models so that they are registered with SQLAlchemy metadata
-from app.models.user import User  # noqa
-from app.models.quiz import Quiz  # existing
-from app.models.quizResult import QuizResult  # existing
-from app.models.question import Question  # new
-from app.models.test import Test  # new
-from app.models.test_session import TestSession  # new
-from app.models.proctor_event import ProctorEvent  # new
+
+from app.models.user import User  
+from app.models.quiz import Quiz  
+from app.models.quizResult import QuizResult 
+from app.models.question import Question  
+from app.models.test import Test  
+from app.models.test_session import TestSession  
 
 def create_tables():
     Base.metadata.create_all(bind=engine)

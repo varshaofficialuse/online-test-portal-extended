@@ -37,6 +37,7 @@ def create_test_manually(
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_required)        
 ):
+    """ If user dont want to create a test from quiz then he can manually create"""
     new_test = db.query(Test).filter(Test.id == test_id).first()
     if not new_test:
         raise HTTPException(status_code=404, detail="Test not found")
@@ -113,6 +114,8 @@ def add_random_questions_from_quiz(
     db: Session = Depends(get_db),
     current_user: User = Depends(admin_required),
 ):
+    
+    """This will shuffle and pick random 30 questions from quiz created by AI and generate TEST"""
     quiz_id = payload.quiz_id
 
     test = db.get(Test, test_id)

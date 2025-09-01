@@ -12,5 +12,5 @@ class TestAnalyticsOut(BaseModel):
     max_score: int
     attempts: int
     question_stats: List[QuestionStat]
-    student_percentage: Optional[float] = None  # new field
+    student_percentage: Optional[float] = None  
 

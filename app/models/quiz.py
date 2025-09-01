@@ -1,4 +1,3 @@
-# quiz.py
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import Integer, JSON, ForeignKey
 from app.core.database import Base

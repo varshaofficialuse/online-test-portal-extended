@@ -10,6 +10,7 @@ from app.schemas.note import NoteCreate, NoteOut
 from  app.api.routers.auth import admin_required
 import os
 
+""" CRUD for note"""
 
 
 router = APIRouter()
@@ -26,8 +27,8 @@ def create_note(data: NoteCreate, db: Session = Depends(get_db), current_user: U
 
 
 @router.get("/", response_model=list[NoteOut])
-def list_notes(db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
-    return db.query(Note).filter(Note.user_id == current_user.id).all()
+def list_notes(db: Session = Depends(get_db)):
+    return db.query(Note).all()
 
 @router.get("/{note_id}", response_model=NoteOut)
 def get_note(note_id: int, db: Session = Depends(get_db), current_user: User = Depends(admin_required)):
