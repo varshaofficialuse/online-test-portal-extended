@@ -26,6 +26,8 @@ def get_current_user(token: HTTPAuthorizationCredentials = Depends(auth_scheme))
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 def calculate_score(db: Session, answers: Dict[str, Any], test_id: int) -> tuple[int, int]:
+
+    """ calculate the score for the test recently submitted by the user"""
     questions = db.query(Question).filter(Question.test_id == test_id).all()
     score = 0
     max_score = 0
@@ -49,7 +51,7 @@ def calculate_score(db: Session, answers: Dict[str, Any], test_id: int) -> tuple
 @router.post("/{test_id}/start")
 def start_session(
     test_id: int,
-    payload: SessionStart,  # you can keep this if you want, but 'webcam_required' won't be used
+    payload: SessionStart, 
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user)
 ):
@@ -106,6 +108,7 @@ def submit_answers(
     db: Session = Depends(get_db),
     user_id: int = Depends(get_current_user)
 ):
+    """ this will submit all the selected answer by the user inside payload calculate score and return test result"""
     session = (
         db.query(TestSession)
         .filter_by(test_id=test_id, user_id=user_id, submitted_at=None)

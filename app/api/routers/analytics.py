@@ -16,7 +16,7 @@ auth_scheme = HTTPBearer()
 
 
 
-
+""" analytical report is created after submitting the test to user"""
 
 
 
@@ -38,7 +38,7 @@ def test_analytics(
     db: Session = Depends(get_db),
     uid: int = Depends(get_current_user),
 ):
-    # fetch this student’s last attempt
+    """ this will return the anlytical report to the user for the current submitted test only"""
     last_session = (
         db.query(TestSession)
         .filter(TestSession.test_id == test_id, TestSession.user_id == uid)

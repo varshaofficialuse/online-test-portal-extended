@@ -1,12 +1,14 @@
-# app/core/config.py
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 import os
 
-# load .env file
 load_dotenv()
 
 class Settings(BaseSettings):
+
+    """" access all the environment variables  which stores confidential information"""
+
+    
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
     DB_PORT: int = int(os.getenv("DB_PORT", 3306))
     DB_NAME: str = os.getenv("DB_NAME", "online_test_portal")
