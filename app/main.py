@@ -1,13 +1,20 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routers import auth, notes, quiz, tests, sessions, analytics
+from dotenv import load_dotenv
+
+load_dotenv()
 
 app = FastAPI(title="Online Test Portal API")
 
+ALLOWED_ORIGINS = os.getenv("ALLOW_ORIGINS", "").split(",")
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

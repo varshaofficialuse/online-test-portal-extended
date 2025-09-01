@@ -20,9 +20,9 @@ db = SessionLocal()
 existing = db.query(User).filter(User.role == "superadmin").first()
 if not existing:
     superadmin = User(
-        name="",
-        email="",
-        password_hash=hash_password(""),
+        name="Varsha Mahale",
+        email="malivarsha1710@gmail.com",
+        password_hash=hash_password("Mahi.parth@123"),
         role=UserRole.SUPERADMIN  # or "superadmin" string
     )
     db.add(superadmin)
