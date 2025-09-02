@@ -9,7 +9,8 @@ load_dotenv()
 
 app = FastAPI(title="Online Test Portal API")
 
-ALLOWED_ORIGINS = os.getenv("ALLOW_ORIGINS", "").split(",")
+ALLOWED_ORIGINS = os.getenv("ALLOW_ORIGINS", "")
+ALLOWED_ORIGINS = ALLOWED_ORIGINS.split(",") if ALLOWED_ORIGINS else []
 
 
 app.add_middleware(
