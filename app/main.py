@@ -11,12 +11,13 @@ app = FastAPI(title="Online Test Portal API")
 
 ALLOWED_ORIGINS = os.getenv("ALLOW_ORIGINS", "")
 ALLOWED_ORIGINS = ALLOWED_ORIGINS.split(",") if ALLOWED_ORIGINS else []
+print(" Allowed origins:", ALLOWED_ORIGINS)
 
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    # allow_origins=ALLOWED_ORIGINS,
+    # allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
