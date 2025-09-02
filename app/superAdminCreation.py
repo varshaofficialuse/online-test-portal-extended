@@ -22,7 +22,7 @@ if not existing:
     superadmin = User(
         name="Varsha Mahale",
         email="malivarsha1710@gmail.com",
-        password_hash=hash_password("Mahi.parth@123"),
+        password_hash=hash_password(""),
         role=UserRole.SUPERADMIN  # or "superadmin" string
     )
     db.add(superadmin)
